@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocab Battle - Multiplayer English Game</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .connection-status {
+            margin-top: 15px;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+
+        /* Pages */
+        .page {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: #1a2980;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0e1a5e;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(26, 41, 128, 0.3);
+        }
+
+        .btn-secondary {
+            background: #26d0ce;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1fb1af;
+            transform: translateY(-3px);
+        }
+
+        .btn-large {
+            padding: 16px 40px;
+            font-size: 1.2rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1a2980;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #1a2980;
+            outline: none;
+        }
+
+        /* Game Code Display */
+        .game-code-box {
+            background: #1a2980;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .game-code {
+            font-family: monospace;
+            font-size: 2.8rem;
+            letter-spacing: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .code-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        /* Player List */
+        .player-list {
+            margin: 20px 0;
+        }
+
+        .player-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 5px solid #26d0ce;
+        }
+
+        .player-item.host {
+            border-left-color: #1a2980;
+            background: #f0f7ff;
+        }
+
+        .player-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .player-score {
+            font-weight: bold;
+            color: #1a2980;
+        }
+
+        /* Game Page */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .timer {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #e74c3c;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .word-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #1a2980;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        @media (min-width: 768px) {
+            .options-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .option {
+            padding: 20px;
+            background: #f1f8ff;
+            border: 2px solid #d1e7ff;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .option:hover {
+            background: #e3f2fd;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .option.selected {
+            background: #1a2980;
+            color: white;
+            border-color: #1a2980;
+        }
+
+        .option.correct {
+            background: #2ecc71;
+            color: white;
+            border-color: #27ae60;
+        }
+
+        .option.incorrect {
+            background: #e74c3c;
+            color: white;
+            border-color: #c0392b;
+        }
+
+        .option.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Game Info */
+        .game-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .round-info {
+            font-size: 1.1rem;
+            color: #1a2980;
+            font-weight: 600;
+        }
+
+        .score-display {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #1a2980;
+        }
+
+        /* Chat */
+        .chat-container {
+            margin-top: 20px;
+        }
+
+        .chat-messages {
+            height: 200px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            border-left: 3px solid #26d0ce;
+        }
+
+        .chat-message.system {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            font-style: italic;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+
+        /* Debug Info */
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            max-width: 300px;
+            display: none;
+        }
+
+        .debug-toggle {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .page {
+                padding: 20px;
+            }
+            
+            .game-code {
+                font-size: 2rem;
+            }
+            
+            .word-display {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-language"></i> Vocab Battle</h1>
+            <div class="subtitle">Real-time English vocabulary game with friends</div>
+            <div class="connection-status" id="connectionStatus">
+                <i class="fas fa-circle" style="color: #e74c3c;"></i> Connecting...
+            </div>
+        </header>
+
+        <!-- Home Page -->
+        <div class="page active" id="homePage">
+            <h2>Welcome to Vocab Battle!</h2>
+            <p style="margin: 20px 0; line-height: 1.6; color: #555;">
+                Challenge your friends to an exciting English vocabulary competition! 
+                Create a game room, share the code, and play together in real-time.
+            </p>
+            
+            <div style="text-align: center; margin: 40px 0;">
+                <button class="btn btn-primary btn-large" onclick="showPage('create')">
+                    <i class="fas fa-plus-circle"></i> Create Game Room
+                </button>
+                <button class="btn btn-secondary btn-large" onclick="showPage('join')">
+                    <i class="fas fa-sign-in-alt"></i> Join Game
+                </button>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 30px;">
+                <h3 style="color: #1a2980; margin-bottom: 15px;">How to Play:</h3>
+                <ol style="line-height: 1.8; padding-left: 20px;">
+                    <li><strong>Create a game</strong> - You'll get a 6-letter code</li>
+                    <li><strong>Share the code</strong> with friends (WhatsApp, email, etc.)</li>
+                    <li><strong>Friends join</strong> by entering the code</li>
+                    <li><strong>Play together</strong> in real-time!</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Create Game Page -->
+        <div class="page" id="createPage">
+            <h2>Create New Game</h2>
+            
+            <div class="form-group">
+                <label for="createName">Your Name</label>
+                <input type="text" id="createName" placeholder="Enter your name" value="Player">
+            </div>
+            
+            <div class="form-group">
+                <label>Game Difficulty</label>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="setDifficulty('easy')">Easy</button>
+                    <button class="btn btn-primary" onclick="setDifficulty('medium')">Medium</button>
+                    <button class="btn btn-secondary" onclick="setDifficulty('hard')">Hard</button>
+                </div>
+                <div style="margin-top: 10px; font-size: 0.9rem; color: #666;">
+                    Selected: <span id="selectedDifficulty">Medium</span>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <button class="btn btn-primary btn-large" onclick="createGame()" id="createBtn">
+                    <i class="fas fa-gamepad"></i> Create Game & Get Code
+                </button>
+                <button class="btn" onclick="showPage('home')" style="background: #6c757d; color: white;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+            </div>
+        </div>
+
+        <!-- Join Game Page -->
+        <div class="page" id="joinPage">
+            <h2>Join a Game</h2>
+            
+            <div class="form-group">
+                <label for="joinName">Your Name</label>
+                <input type="text" id="joinName" placeholder="Enter your name" value="Friend">
+            </div>
+            
+            <div class="form-group">
+                <label for="gameCodeInput">Game Code</label>
+                <input type="text" id="gameCodeInput" placeholder="Enter 6-letter game code" 
+                       style="text-transform: uppercase; font-size: 1.2rem; letter-spacing: 3px; text-align: center;">
+                <div style="margin-top: 10px; font-size: 0.9rem; color: #666;">
+                    Ask your friend for the game code
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <button class="btn btn-primary btn-large" onclick="joinGame()" id="joinBtn">
+                    <i class="fas fa-sign-in-alt"></i> Join Game
+                </button>
+                <button class="btn" onclick="showPage('home')" style="background: #6c757d; color: white;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+            </div>
+        </div>
+
+        <!-- Lobby Page -->
+        <div class="page" id="lobbyPage">
+            <h2>Game Lobby</h2>
+            
+            <div class="game-code-box">
+                <div class="code-label">Game Code:</div>
+                <div class="game-code" id="displayGameCode">ABC123</div>
+                <div style="margin-top: 10px; font-size: 0.9rem;">
+                    Share this code with friends!
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin: 20px 0;">
+                <button class="btn btn-secondary" onclick="copyGameCode()" id="copyCodeBtn">
+                    <i class="fas fa-copy"></i> Copy Code
+                </button>
+                <button class="btn btn-secondary" onclick="shareViaWhatsApp()">
+                    <i class="fab fa-whatsapp"></i> Share on WhatsApp
+                </button>
+            </div>
+            
+            <h3>Players (<span id="playerCount">1</span>/6)</h3>
+            <div class="player-list" id="playerList">
+                <!-- Players will appear here -->
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <button class="btn btn-primary btn-large" onclick="startGame()" id="startBtn" disabled>
+                    <i class="fas fa-play"></i> Start Game (Need 2+ players)
+                </button>
+                <button class="btn" onclick="leaveLobby()" style="background: #6c757d; color: white;">
+                    <i class="fas fa-sign-out-alt"></i> Leave Lobby
+                </button>
+            </div>
+            
+            <div class="chat-container">
+                <h3><i class="fas fa-comments"></i> Lobby Chat</h3>
+                <div class="chat-messages" id="lobbyChatMessages">
+                    <div class="chat-message system">
+                        Welcome to the game lobby! Share the code above with friends to invite them.
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="lobbyChatInput" placeholder="Type a message...">
+                    <button class="btn btn-secondary" onclick="sendLobbyChat()">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Page -->
+        <div class="page" id="gamePage">
+            <div class="game-header">
+                <div>
+                    <div style="font-weight: bold; color: #1a2980; font-size: 1.2rem;" id="gamePlayerName">You</div>
+                    <div style="font-size: 0.9rem; color: #666;">vs <span id="opponentNames">...</span></div>
+                </div>
+                <div class="score-display">
+                    Score: <span id="currentScore">0</span>
+                </div>
+            </div>
+            
+            <div class="game-info">
+                <div class="round-info">
+                    Round: <span id="currentRound">1</span>/<span id="totalRounds">10</span>
+                </div>
+                <div style="color: #666;">
+                    Difficulty: <span id="gameDifficulty">Medium</span>
+                </div>
+            </div>
+            
+            <div class="timer" id="timer">30</div>
+            
+            <div class="word-display" id="currentWord">Loading question...</div>
+            
+            <div class="options-container" id="optionsContainer">
+                <!-- Options will appear here -->
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <button class="btn btn-secondary" onclick="useHint()" id="hintBtn">
+                    <i class="fas fa-lightbulb"></i> Get Hint (-2 points)
+                </button>
+                <button class="btn" onclick="leaveGame()" style="background: #6c757d; color: white;">
+                    <i class="fas fa-sign-out-alt"></i> Leave Game
+                </button>
+            </div>
+            
+            <div class="chat-container">
+                <h3><i class="fas fa-comments"></i> Game Chat</h3>
+                <div class="chat-messages" id="gameChatMessages">
+                    <div class="chat-message system">Game started! Good luck everyone!</div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="gameChatInput" placeholder="Type a message...">
+                    <button class="btn btn-secondary" onclick="sendGameChat()">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug Panel -->
+        <div class="debug-toggle" onclick="toggleDebug()">Debug Info</div>
+        <div class="debug-info" id="debugInfo">
+            <div><strong>Connection Status:</strong> <span id="debugStatus">Disconnected</span></div>
+            <div><strong>Player ID:</strong> <span id="debugPlayerId">-</span></div>
+            <div><strong>Game Code:</strong> <span id="debugGameCode">-</span></div>
+            <div><strong>WS State:</strong> <span id="debugWsState">-</span></div>
+            <div><strong>Last Message:</strong> <span id="debugLastMsg">-</span></div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let socket = null;
+        let gameState = {
+            playerId: '',
+            playerName: '',
+            gameCode: '',
+            isHost: false,
+            players: [],
+            score: 0,
+            currentQuestion: null,
+            answered: false,
+            difficulty: 'medium'
+        };
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            connectWebSocket();
+            showPage('home');
+        });
+
+        // WebSocket Connection
+        function connectWebSocket() {
+            // Determine WebSocket URL based on current location
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname;
+            const wsUrl = `${protocol}//${host}:${window.location.port || 3000}`;
+            
+            console.log('Connecting to:', wsUrl);
+            
+            socket = new WebSocket(wsUrl);
+            
+            socket.onopen = () => {
+                console.log('✅ WebSocket connected successfully!');
+                updateConnectionStatus('connected');
+            };
+            
+            socket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('📨 Received:', data.type, data);
+                    updateDebug('lastMsg', data.type);
+                    handleServerMessage(data);
+                } catch (error) {
+                    console.error('Error parsing message:', error);
+                }
+            };
+            
+            socket.onclose = (event) => {
+                console.log('❌ WebSocket disconnected:', event.code, event.reason);
+                updateConnectionStatus('disconnected');
+                
+                // Try to reconnect after 5 seconds
+                setTimeout(() => {
+                    if (!socket || socket.readyState === WebSocket.CLOSED) {
+                        console.log('Attempting to reconnect...');
+                        connectWebSocket();
+                    }
+                }, 5000);
+            };
+            
+            socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                updateConnectionStatus('error');
+            };
+        }
+
+        // Update connection status display
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('connectionStatus');
+            const icon = statusEl.querySelector('i');
+            
+            switch(status) {
+                case 'connected':
+                    statusEl.innerHTML = '<i class="fas fa-circle" style="color: #2ecc71;"></i> Connected';
+                    statusEl.style.color = '#2ecc71';
+                    break;
+                case 'disconnected':
+                    statusEl.innerHTML = '<i class="fas fa-circle" style="color: #e74c3c;"></i> Disconnected';
+                    statusEl.style.color = '#e74c3c';
+                    break;
+                case 'error':
+                    statusEl.innerHTML = '<i class="fas fa-circle" style="color: #f39c12;"></i> Connection Error';
+                    statusEl.style.color = '#f39c12';
+                    break;
+            }
+            
+            updateDebug('status', status);
+            updateDebug('wsState', getWebSocketState(socket));
+        }
+
+        function getWebSocketState(ws) {
+            if (!ws) return 'No socket';
+            switch(ws.readyState) {
+                case WebSocket.CONNECTING: return 'Connecting';
+                case WebSocket.OPEN: return 'Open';
+                case WebSocket.CLOSING: return 'Closing';
+                case WebSocket.CLOSED: return 'Closed';
+                default: return 'Unknown';
+            }
+        }
+
+        // Handle server messages
+        function handleServerMessage(data) {
+            switch(data.type) {
+                case 'connected':
+                    gameState.playerId = data.playerId;
+                    updateDebug('playerId', data.playerId);
+                    break;
+                    
+                case 'game_created':
+                    gameState.gameCode = data.gameCode;
+                    gameState.isHost = true;
+                    gameState.players = data.players || [];
+                    
+                    document.getElementById('displayGameCode').textContent = data.gameCode;
+                    updatePlayerList(data.players);
+                    updateDebug('gameCode', data.gameCode);
+                    
+                    showPage('lobby');
+                    addLobbyChatMessage('System', `Game created! Code: ${data.gameCode}`);
+                    break;
+                    
+                case 'player_joined':
+                    if (data.players) {
+                        gameState.players = data.players;
+                        updatePlayerList(data.players);
+                        
+                        // Welcome message
+                        addLobbyChatMessage('System', `${data.player ? data.player.name : 'A player'} joined the game!`);
+                        
+                        // Update start button if host
+                        if (gameState.isHost) {
+                            const startBtn = document.getElementById('startBtn');
+                            startBtn.disabled = data.playerCount < 2;
+                            startBtn.innerHTML = `<i class="fas fa-play"></i> Start Game (${data.playerCount} players)`;
+                        }
+                    }
+                    break;
+                    
+                case 'player_left':
+                    if (data.players) {
+                        gameState.players = data.players;
+                        updatePlayerList(data.players);
+                        addLobbyChatMessage('System', `${data.playerName} left the game`);
+                    }
+                    break;
+                    
+                case 'game_started':
+                    gameState.players = data.players || [];
+                    document.getElementById('gameDifficulty').textContent = data.settings?.difficulty || 'Medium';
+                    document.getElementById('totalRounds').textContent = data.settings?.rounds || 10;
+                    document.getElementById('gamePlayerName').textContent = gameState.playerName;
+                    
+                    // Update opponent names
+                    const opponents = data.players
+                        .filter(p => p.id !== gameState.playerId)
+                        .map(p => p.name)
+                        .join(', ');
+                    document.getElementById('opponentNames').textContent = opponents || 'Waiting...';
+                    
+                    showPage('game');
+                    break;
+                    
+                case 'new_question':
+                    gameState.currentQuestion = data;
+                    gameState.answered = false;
+                    
+                    document.getElementById('currentWord').textContent = data.question;
+                    document.getElementById('currentRound').textContent = data.round;
+                    
+                    // Display options
+                    const container = document.getElementById('optionsContainer');
+                    container.innerHTML = '';
+                    
+                    data.options.forEach((option, index) => {
+                        const optionEl = document.createElement('div');
+                        optionEl.className = 'option';
+                        optionEl.textContent = option;
+                        optionEl.onclick = () => selectAnswer(option, data.correctAnswer);
+                        container.appendChild(optionEl);
+                    });
+                    
+                    // Start timer
+                    startTimer(data.timeLimit || 30);
+                    break;
+                    
+                case 'question_results':
+                    // Show results
+                    updateScores(data.players);
+                    break;
+                    
+                case 'game_over':
+                    alert(`Game Over! Winner: ${data.winner?.name || 'Unknown'}\nYour score: ${gameState.score}`);
+                    showPage('home');
+                    break;
+                    
+                case 'chat_message':
+                    if (window.location.hash === '#game') {
+                        addGameChatMessage(data.player, data.message);
+                    } else {
+                        addLobbyChatMessage(data.player, data.message);
+                    }
+                    break;
+                    
+                case 'error':
+                    alert('Error: ' + data.message);
+                    break;
+            }
+        }
+
+        // Send message to server
+        function sendToServer(type, data) {
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+                console.error('Cannot send: WebSocket not connected');
+                updateConnectionStatus('disconnected');
+                return false;
+            }
+            
+            const message = { type, ...data };
+            console.log('📤 Sending:', type, message);
+            socket.send(JSON.stringify(message));
+            return true;
+        }
+
+        // Page Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId + 'Page').classList.add('active');
+            window.location.hash = pageId;
+        }
+
+        // Create Game
+        function createGame() {
+            const playerName = document.getElementById('createName').value.trim() || 'Player';
+            gameState.playerName = playerName;
+            gameState.difficulty = document.getElementById('selectedDifficulty').textContent.toLowerCase();
+            
+            if (!sendToServer('create_game', {
+                playerName: playerName,
+                settings: {
+                    rounds: 10,
+                    difficulty: gameState.difficulty,
+                    timePerQuestion: 30
+                }
+            })) {
+                alert('Cannot create game: Not connected to server');
+            }
+        }
+
+        // Join Game
+        function joinGame() {
+            const playerName = document.getElementById('joinName').value.trim() || 'Friend';
+            const gameCode = document.getElementById('gameCodeInput').value.trim().toUpperCase();
+            
+            if (gameCode.length !== 6) {
+                alert('Please enter a valid 6-letter game code');
+                return;
+            }
+            
+            gameState.playerName = playerName;
+            gameState.gameCode = gameCode;
+            
+            if (!sendToServer('join_game', {
+                playerName: playerName,
+                gameCode: gameCode
+            })) {
+                alert('Cannot join game: Not connected to server');
+            }
+        }
+
+        // Set difficulty
+        function setDifficulty(level) {
+            gameState.difficulty = level;
+            document.getElementById('selectedDifficulty').textContent = 
+                level.charAt(0).toUpperCase() + level.slice(1);
+        }
+
+        // Update player list
+        function updatePlayerList(players) {
+            const container = document.getElementById('playerList');
+            const countEl = document.getElementById('playerCount');
+            
+            container.innerHTML = '';
+            countEl.textContent = players.length;
+            
+            players.forEach(player => {
+                const playerEl = document.createElement('div');
+                playerEl.className = `player-item ${player.isHost ? 'host' : ''}`;
+                playerEl.innerHTML = `
+                    <div class="player-name">${player.name} ${player.isHost ? '(Host)' : ''}</div>
+                    <div class="player-score">${player.score || 0}</div>
+                `;
+                container.appendChild(playerEl);
+            });
+        }
+
+        // Update scores
+        function updateScores(players) {
+            const currentPlayer = players.find(p => p.id === gameState.playerId);
+            if (currentPlayer) {
+                gameState.score = currentPlayer.score;
+                document.getElementById('currentScore').textContent = currentPlayer.score;
+            }
+            
+            updatePlayerList(players);
+        }
+
+        // Start game (host only)
+        function startGame() {
+            if (!gameState.isHost) return;
+            
+            if (gameState.players.length < 2) {
+                alert('Need at least 2 players to start!');
+                return;
+            }
+            
+            sendToServer('start_game', { gameCode: gameState.gameCode });
+        }
+
+        // Select answer
+        function selectAnswer(answer, correctAnswer) {
+            if (gameState.answered || !gameState.currentQuestion) return;
+            
+            gameState.answered = true;
+            
+            // Highlight selected option
+            const options = document.querySelectorAll('.option');
+            options.forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.textContent === answer) {
+                    opt.classList.add('selected');
+                    if (answer === correctAnswer) {
+                        opt.classList.add('correct');
+                        gameState.score += 10;
+                        document.getElementById('currentScore').textContent = gameState.score;
+                    } else {
+                        opt.classList.add('incorrect');
+                        // Highlight correct answer
+                        options.forEach(o => {
+                            if (o.textContent === correctAnswer) {
+                                o.classList.add('correct');
+                            }
+                        });
+                    }
+                }
+                opt.classList.add('disabled');
+            });
+            
+            sendToServer('submit_answer', {
+                gameCode: gameState.gameCode,
+                answer: answer,
+                correctAnswer: correctAnswer
+            });
+        }
+
+        // Timer
+        let timerInterval;
+        function startTimer(seconds) {
+            clearInterval(timerInterval);
+            
+            let timeLeft = seconds;
+            const timerEl = document.getElementById('timer');
+            timerEl.textContent = timeLeft;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    // Time's up - auto-submit if not answered
+                    if (!gameState.answered && gameState.currentQuestion) {
+                        sendToServer('submit_answer', {
+                            gameCode: gameState.gameCode,
+                            answer: '',
+                            correctAnswer: gameState.currentQuestion.correctAnswer
+                        });
+                    }
+                }
+            }, 1000);
+        }
+
+        // Hint
+        function useHint() {
+            if (gameState.score >= 2) {
+                gameState.score -= 2;
+                document.getElementById('currentScore').textContent = gameState.score;
+                
+                if (gameState.currentQuestion) {
+                    const hint = `Hint: The word starts with "${gameState.currentQuestion.question.charAt(0)}"`;
+                    addGameChatMessage('System', hint);
+                }
+            } else {
+                alert('Not enough points for hint!');
+            }
+        }
+
+        // Chat functions
+        function addLobbyChatMessage(sender, message) {
+            const container = document.getElementById('lobbyChatMessages');
+            const msgEl = document.createElement('div');
+            msgEl.className = `chat-message ${sender === 'System' ? 'system' : ''}`;
+            msgEl.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            container.appendChild(msgEl);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addGameChatMessage(sender, message) {
+            const container = document.getElementById('gameChatMessages');
+            const msgEl = document.createElement('div');
+            msgEl.className = `chat-message ${sender === 'System' ? 'system' : ''}`;
+            msgEl.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            container.appendChild(msgEl);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendLobbyChat() {
+            const input = document.getElementById('lobbyChatInput');
+            const message = input.value.trim();
+            
+            if (message && gameState.gameCode) {
+                sendToServer('chat_message', {
+                    gameCode: gameState.gameCode,
+                    message: message
+                });
+                input.value = '';
+            }
+        }
+
+        function sendGameChat() {
+            const input = document.getElementById('gameChatInput');
+            const message = input.value.trim();
+            
+            if (message && gameState.gameCode) {
+                sendToServer('chat_message', {
+                    gameCode: gameState.gameCode,
+                    message: message
+                });
+                input.value = '';
+            }
+        }
+
+        // Share functions
+        function copyGameCode() {
+            navigator.clipboard.writeText(gameState.gameCode).then(() => {
+                alert(`Game code "${gameState.gameCode}" copied to clipboard!`);
+            });
+        }
+
+        function shareViaWhatsApp() {
+            const message = `Join my English vocabulary game! Code: ${gameState.gameCode}\nURL: ${window.location.href}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        // Leave functions
+        function leaveLobby() {
+            if (confirm('Leave the game lobby?')) {
+                socket.close();
+                gameState = {
+                    playerId: '',
+                    playerName: '',
+                    gameCode: '',
+                    isHost: false,
+                    players: [],
+                    score: 0
+                };
+                showPage('home');
+                connectWebSocket();
+            }
+        }
+
+        function leaveGame() {
+            if (confirm('Leave the game? Your progress will be lost.')) {
+                socket.close();
+                gameState = {
+                    playerId: '',
+                    playerName: '',
+                    gameCode: '',
+                    isHost: false,
+                    players: [],
+                    score: 0
+                };
+                showPage('home');
+                connectWebSocket();
+            }
+        }
+
+        // Debug functions
+        function toggleDebug() {
+            const debugEl = document.getElementById('debugInfo');
+            debugEl.style.display = debugEl.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function updateDebug(key, value) {
+            const el = document.getElementById('debug' + key.charAt(0).toUpperCase() + key.slice(1));
+            if (el) el.textContent = value;
+        }
+
+        // Auto-connect when returning to page
+        window.addEventListener('focus', () => {
+            if (!socket || socket.readyState === WebSocket.CLOSED) {
+                connectWebSocket();
+            }
+        });
+    </script>
+</body>
+</html>
